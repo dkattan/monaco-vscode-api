@@ -21,11 +21,14 @@ fi
 
 rm -rf $output_directory
 
-build_directory=`mktemp -d`
-echo "Downloading vscode $vscodeRef in $build_directory..."
+build_directory="`pwd`/.build/$start_time" 
+mkdir -p $build_directory
+temp_directory=$(mktemp -d)
+temp_directory="$build_directory"
+echo "Downloading vscode $vscodeRef to $temp_directory..."
 
-curl -L --max-redirs 5 https://github.com/Microsoft/vscode/tarball/$vscodeRef | tar -xz -C $build_directory --strip-components=1 microsoft-vscode-${vscodeRef:0:7}
-vscodeVersion=$(cat "$build_directory/package.json" | jq -r '.["version"]')
+curl -L --max-redirs 5 https://github.com/Microsoft/vscode/tarball/$vscodeRef --limit-rate 1G | tar -xz -C $temp_directory --strip-components=1 microsoft-vscode-${vscodeRef:0:7}
+vscodeVersion=$(cat "$temp_directory/package.json" | jq -r '.["version"]')
 cat <<< "$(jq ".config.vscode.version = \"$vscodeVersion\"" package.json)" > package.json
 
 cd $build_directory
